@@ -42,6 +42,7 @@ return {
         "query",
         "vimdoc",
         "c",
+        "luau",
       },
       incremental_selection = {
         enable = true,

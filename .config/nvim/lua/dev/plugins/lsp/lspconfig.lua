@@ -5,6 +5,8 @@ return {
     "hrsh7th/cmp-nvim-lsp",
     { "antosha417/nvim-lsp-file-operations", config = true },
     { "folke/neodev.nvim", opts = {} },
+    "lopi-py/luau-lsp.nvim",
+    "nvim-lua/plenary.nvim",
   },
   config = function()
     -- import lspconfig plugin
@@ -22,7 +24,7 @@ return {
       group = vim.api.nvim_create_augroup("UserLspConfig", {}),
       callback = function(ev)
         -- Buffer local mappings.
-        -- See `:help vim.lsp.*` for documentation on any of the below functions
+        -- See :help vim.lsp.* for documentation on any of the below functions
         local opts = { buffer = ev.buf, silent = true }
 
         -- set keybinds
@@ -48,7 +50,7 @@ return {
         keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts) -- smart rename
 
         opts.desc = "Show buffer diagnostics"
-        keymap.set("n", "<leader>D", "<cmd>Telescope diagnostics bufnr=0<CR>", opts) -- show  diagnostics for file
+        keymap.set("n", "<leader>D", "<cmd>Telescope diagnostics bufnr=0<CR>", opts) -- show diagnostics for file
 
         opts.desc = "Show line diagnostics"
         keymap.set("n", "<leader>d", vim.diagnostic.open_float, opts) -- show diagnostics for line
@@ -78,6 +80,22 @@ return {
       vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
     end
 
+    local function rojo_project()
+      return vim.fs.root(0, function(name)
+        return name:match(".+%.project%.json$")
+      end)
+    end
+
+    if rojo_project() then
+      vim.filetype.add({
+        extension = {
+          lua = function(path)
+            return path:match("%.nvim%.lua$") and "lua" or "luau"
+          end,
+        },
+      })
+    end
+
     mason_lspconfig.setup_handlers({
       -- default handler for installed servers
       function(server_name)
@@ -100,6 +118,7 @@ return {
           end,
         })
       end,
+
       ["graphql"] = function()
         -- configure graphql language server
         lspconfig["graphql"].setup({
@@ -107,6 +126,7 @@ return {
           filetypes = { "graphql", "gql", "svelte", "typescriptreact", "javascriptreact" },
         })
       end,
+
       ["emmet_ls"] = function()
         -- configure emmet language server
         lspconfig["emmet_ls"].setup({
@@ -114,6 +134,7 @@ return {
           filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
         })
       end,
+
       ["lua_ls"] = function()
         -- configure lua server (with special settings)
         lspconfig["lua_ls"].setup({
@@ -131,7 +152,55 @@ return {
           },
         })
       end,
+
+      ["luau_lsp"] = function()
+        local RBX_LOCAL_TYPES_PATH = "/tmp/rbxLocalTypes.d.luau"
+        local rbxLocal = require("plenary.path"):new(RBX_LOCAL_TYPES_PATH)
+        if not rbxLocal:exists() then
+          rbxLocal:touch()
+        end
+
+        require("luau-lsp").setup({
+          platform = {
+            type = rojo_project() and "roblox" or "standard",
+          },
+          types = {
+            roblox_security_level = "PluginSecurity",
+            definition_files = { RBX_LOCAL_TYPES_PATH },
+          },
+          sourcemap = {
+            enabled = true,
+            autogenerate = true, -- automatic generation when the server is attached
+            rojo_project_file = "default.project.json",
+            sourcemap_file = "sourcemap.json",
+          },
+          plugin = {
+            enabled = true,
+            port = 3667,
+          },
+          fflags = {
+            sync = true, -- sync currently enabled fflags with roblox's published fflags
+            override = {
+              LuauSolverV2 = "True", -- enable the new solver
+            },
+          },
+          server = {
+            capabilities = capabilities,
+            settings = {
+              ["luau-lsp"] = {
+                completion = {
+                  imports = {
+                    enabled = true, -- enable auto imports
+                  },
+                },
+                require = {
+                  directoryAliases = require("luau-lsp").aliases(),
+                },
+              },
+            },
+          },
+        })
+      end,
     })
   end,
 }
-

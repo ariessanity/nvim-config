@@ -1,7 +1,6 @@
 return {
   "stevearc/conform.nvim",
   event = { "BufReadPre", "BufNewFile" },
-  branch = "nvim-0.9",
   config = function()
     local conform = require("conform")
 
@@ -29,7 +28,15 @@ return {
       },
     })
 
+    -- Keymap to format Lua and Luau files, and trigger conform formatting
     vim.keymap.set({ "n", "v" }, "<leader>mp", function()
+      local filetype = vim.bo.filetype
+
+      -- Check if the file is Lua or Luau
+      if filetype == "lua" or filetype == "luau" then
+        vim.fn.system("stylua --glob '**/*.luau' -- src")
+      end
+
       conform.format({
         lsp_fallback = true,
         async = false,

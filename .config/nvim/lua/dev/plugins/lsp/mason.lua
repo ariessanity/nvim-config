@@ -37,7 +37,10 @@ return {
         "emmet_ls",
         "prismals",
         "pyright",
+        "clangd",
+        "luau_lsp",
       },
+      automatic_installation = true,
     })
 
     mason_tool_installer.setup({
