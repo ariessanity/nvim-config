@@ -1,4 +1,4 @@
-# Development Environment Setup Guide
+# Setup Guide
 
 This guide provides instructions for setting up a complete development environment with Homebrew, Alacritty, Powerlevel10k, Neovim, and Tmux.
 
