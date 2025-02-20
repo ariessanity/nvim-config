@@ -42,6 +42,7 @@ source ~/.zshrc
 brew install neovim
 brew install node
 brew install ripgrep
+brew install fd
 brew install fzf
 brew install make
 brew install gcc
